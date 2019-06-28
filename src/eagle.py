@@ -75,12 +75,6 @@ class Eagle(object):
             )
         )
         self.send_log_to_user(str(stdout.read()))
-        # localfn = os.sep.join([self.localdir, log_info['name']])
-        # print(log_info['longname'], localfn)
-        # def track_get(partial, total):
-        #     print('%d%%' % ((float(partial) / total)*100))
-        # self.sftp.get(self.tempfile, localfn, track_get)
-
 
     def send(self, log_info):
         self.get_file(log_info)
