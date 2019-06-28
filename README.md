@@ -20,4 +20,4 @@ To make development mode in Svelte without the python service
 `npm start:dev`
 
 To make autobuild happen while Python is running
-`npm autobuild`
+`npm run autobuild`
