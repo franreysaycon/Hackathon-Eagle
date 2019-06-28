@@ -1,3 +1,5 @@
 eagle-env
 src/web/public
 node_modules
+config.json
+eagle.conf
