@@ -19,7 +19,6 @@
         eel.connect(host)(
             function(result) {
                 loading=false;
-                console.log(result)
                 if(result.success){
                     setView(VIEWS.LOGS);
                 }
