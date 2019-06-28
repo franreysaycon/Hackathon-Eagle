@@ -1,6 +1,13 @@
 <script>
     import Loading from './Loading.svelte';
+    import Logs from './Logs.svelte';
 
+    const VIEWS = {
+        CONNECT: 0,
+        LOGS: 1
+    };
+
+    let currentView = VIEWS.CONNECT;
     let host = "";
     let loading = false;
     let error = "";
@@ -8,13 +15,21 @@
     function handleSubmit(){
         loading = true;
         eel.connect(host)(
-            function(e) {
+            function(result) {
                 loading=false;
-                if(e !== "success"){
-                    alert("Something went wrong. Please check if your host is already provisioned.");
+                console.log(result)
+                if(result.success){
+                    setView(VIEWS.LOGS);
+                }
+                else {
+                    alert("Something went wrong. Please check if your host is already provisioned. Error encountered: " + result.message);
                 }
             }
         );
+    }
+
+    function setView(view) {
+        currentView = view;
     }
 </script>
 
@@ -46,6 +61,7 @@
         border: none;
         font-family: 'Noto Sans HK', sans-serif;
         font-size: 2em;
+        text-align: right;
     }
 
     h1{
@@ -69,18 +85,22 @@
     }
 </style>
 
-<div class="main-container">
+{#if currentView === VIEWS.CONNECT }
+    <div class="main-container">
 
-    <h1>What is your dev box? </h1>
-    <div class="form-container">
-        <input bind:value={host} type="text"/>
-        <h2>.syd1.fln-dev.net</h2>
+        <h1>What is your dev box? </h1>
+        <div class="form-container">
+            <input bind:value={host} type="text"/>
+            <h2>.syd1.fln-dev.net</h2>
+        </div>
+        {#if loading }
+             <Loading />
+        {:else}
+            <button on:click={handleSubmit}>GET STARTED</button>
+        {/if}
     </div>
-    {#if loading }
-         <Loading />
-    {:else}
-        <button on:click={handleSubmit}>GET STARTED</button>
-    {/if}
-</div>
+{/if}
 
-
+{#if currentView === VIEWS.LOGS }
+    <Logs />
+{/if}
