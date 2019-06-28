@@ -49,20 +49,19 @@
     }
 </style>
 <script>
-    let name = "";
-    eel.get_my_name()(
-        function(ret){
-            name = ret;
-        }
-    );
+    let host = "";
+
+    function handleSubmit(){
+        eel.connect(host);
+    }
 </script>
 
 <div class="main-container">
 
     <h1>What is your dev box? </h1>
     <div class="form-container">
-        <input type="text"/>
+        <input bind:value={host} type="text"/>
         <h2>.syd1.fln-dev.net</h2>
     </div>
-    <button>GET STARTED</button>
+    <button on:click={handleSubmit}>GET STARTED</button>
 </div>
