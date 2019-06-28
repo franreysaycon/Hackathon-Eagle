@@ -44,6 +44,11 @@
         }
     }
 
+    eel.expose(push);
+    function push(log){
+        console.log(log);
+    }
+
 </script>
 
 <style>

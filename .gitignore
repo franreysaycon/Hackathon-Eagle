@@ -3,3 +3,5 @@ src/web/public
 node_modules
 config.json
 eagle.conf
+npm-debug.log
+logs
