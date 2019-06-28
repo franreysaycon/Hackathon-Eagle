@@ -87,10 +87,6 @@ class Eagle(object):
 
 
     def watch(self):
-        # wait for user to start Eagle
-        # while self.waiting and not self.running:
-        #   sleep(1000)
-
         # initially send the all log files
         self.logs = self.get_logs_info()
         for log_name in self.logs:
@@ -110,9 +106,6 @@ class Eagle(object):
                     self.send(log)
                     # update the cached log info
                     self.logs[log_key] = log_info[log_key]
-
-        # watch was stopped, wait for 5 seconds before exiting
-        # sleep(5000)
 
 
     def open(self, hostname):
