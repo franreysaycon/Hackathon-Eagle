@@ -2,6 +2,7 @@ from configparser import ConfigParser
 from random import Random
 import paramiko
 import os
+import eel
 
 class Eagle(object):
 
@@ -69,15 +70,16 @@ class Eagle(object):
     def get_file(self, log_info):
         print(log_info)
         stdin, stdout, stderr = self.ssh.exec_command(
-            'nl %s | tail -n +%d -q | tail -n %d -q > %s' % (
-                log_info['longname'], log_info['start'], self.maxlines, self.tempfile
+            'tail -n +%d -q %s | tail -n %d -q' % (
+                log_info['start'],log_info['longname'], self.maxlines
             )
         )
-        localfn = os.sep.join([self.localdir, log_info['name']])
-        print(log_info['longname'], localfn)
-        def track_get(partial, total):
-            print('%d%%' % ((float(partial) / total)*100))
-        self.sftp.get(self.tempfile, localfn, track_get)
+        self.send_log_to_user(str(stdout.read()))
+        # localfn = os.sep.join([self.localdir, log_info['name']])
+        # print(log_info['longname'], localfn)
+        # def track_get(partial, total):
+        #     print('%d%%' % ((float(partial) / total)*100))
+        # self.sftp.get(self.tempfile, localfn, track_get)
 
 
     def send(self, log_info):
@@ -94,18 +96,18 @@ class Eagle(object):
 
         # sleep and watch for log changes
         while self.running and not self.waiting:
-            eel.sleep(1);
+            eel.sleep(1)
             logs_info = self.get_logs_info()
             for log_key in logs_info:
                 if (
-                    log_info[log_key]['date'] != self.logs[log_key]['date']
+                    logs_info[log_key]['date'] != self.logs[log_key]['date']
                     or
-                    log_info[log_key]['size'] != self.logs[log_key]['size']
+                    logs_info[log_key]['size'] != self.logs[log_key]['size']
                 ):
                     # the remote file has changed, send the log
-                    self.send(log)
+                    self.send(logs_info[log_key])
                     # update the cached log info
-                    self.logs[log_key] = log_info[log_key]
+                    self.logs[log_key] = logs_info[log_key]
 
 
     def open(self, hostname):
