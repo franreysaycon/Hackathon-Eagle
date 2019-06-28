@@ -6,4 +6,4 @@ eel.init('src/web')
 def get_my_name():
     return "World!"
 
-eel.start('index.html', size=(800,800))
+eel.start('index.html', size=(1000,800))
