@@ -13,7 +13,7 @@ def connect(host):
     except Exception as e:
         return {
             "success": False,
-            "message": e
+            "message": str(e)
         }
 
     return {

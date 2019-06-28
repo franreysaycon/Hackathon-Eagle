@@ -1,6 +1,7 @@
 <script>
     import Loading from './Loading.svelte';
     import Logs from './Logs.svelte';
+    import ErrorModal from './ErrorModal.svelte';
 
     const VIEWS = {
         CONNECT: 0,
@@ -11,6 +12,7 @@
     let host = "";
     let loading = false;
     let error = "";
+    let modalOpen = false;
 
     function handleSubmit(){
         loading = true;
@@ -22,7 +24,8 @@
                     setView(VIEWS.LOGS);
                 }
                 else {
-                    alert("Something went wrong. Please check if your host is already provisioned. Error encountered: " + result.message);
+                    error = "Something went wrong. Please check if your host is already provisioned. Error encountered: " + result.message;
+                    modalOpen = true;
                 }
             }
         );
@@ -31,6 +34,16 @@
     function setView(view) {
         currentView = view;
     }
+
+    function toggleErrorModal(){
+        if(modalOpen){
+            modalOpen = false;
+        }
+        else{
+            modalOpen = true;
+        }
+    }
+
 </script>
 
 <style>
@@ -103,4 +116,8 @@
 
 {#if currentView === VIEWS.LOGS }
     <Logs />
+{/if}
+
+{#if modalOpen}
+    <ErrorModal message={error} handleClose={toggleErrorModal} />
 {/if}
