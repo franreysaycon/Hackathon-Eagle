@@ -1,3 +1,23 @@
+<script>
+    import Loading from './Loading.svelte';
+
+    let host = "";
+    let loading = false;
+    let error = "";
+
+    function handleSubmit(){
+        loading = true;
+        eel.connect(host)(
+            function(e) {
+                loading=false;
+                if(e !== "success"){
+                    alert("Something went wrong. Please check if your host is already provisioned.");
+                }
+            }
+        );
+    }
+</script>
+
 <style>
     div.main-container {
         display: flex;
@@ -48,13 +68,6 @@
         opacity: 0.9;
     }
 </style>
-<script>
-    let host = "";
-
-    function handleSubmit(){
-        eel.connect(host);
-    }
-</script>
 
 <div class="main-container">
 
@@ -63,5 +76,11 @@
         <input bind:value={host} type="text"/>
         <h2>.syd1.fln-dev.net</h2>
     </div>
-    <button on:click={handleSubmit}>GET STARTED</button>
+    {#if loading }
+         <Loading />
+    {:else}
+        <button on:click={handleSubmit}>GET STARTED</button>
+    {/if}
 </div>
+
+
