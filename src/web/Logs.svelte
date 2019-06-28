@@ -3,7 +3,7 @@
 
     let currentLog = undefined;
     let content = "";
-    let lines = [];
+    let lines = ["{\"message\": \"------------ Setting up server at Fri Jun 28 06:15:34 2019\"}\\n{\"message\": \"Spawning 5 workers\"}\\n{\"message\": \"Worker garbage collection is disabled\"}\\n{\"message\": \"Registered plugin: UserHandler\"}\\n{\"message\": \"API Handler registered for plugin events.\"}\\n{\"message\": \"Registered plugin: QueueLoggingPlugin\"}\\n{\"message\": \"Registered plugin: CallTimerPlugin\"}\\n{\"message\": \"Registered plugin: QueueStatsPlugin\"}\\n{\"message\": \"Registered plugin: AuthHandler\"}\\n{\"message\": \"Registered plugin: UsersExceptionHandler\"}\\n{\"message\": \"Registered plugin: TrackingPlugin\"}\\n{\"message\": \"Registered plugin: LocalStoragePlugin\"}\\n{\"message\": \"Registered plugin: TokenBucketRecycler\"}\\n{\"message\": \"Starting server.\"}\\n{\"message\": \"Opening transport.\"}\\n{\"message\": \"Starting worker pool.\"}\\n{\"message\": \"Setting up signal handlers.\"}\\n{\"message\": \"Ready to accept connections.\"}"];
 
     function handleClick(event) {
         const LOG_FILE = event.target.id;
@@ -86,9 +86,9 @@
             </div>
         {/each}
     </div>
-    <code class="content">
+    <div class="content">
         {#each lines as line}
             {line}<br />
         {/each}
-    </code>
+    </div>
 </div>

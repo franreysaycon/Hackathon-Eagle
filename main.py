@@ -10,7 +10,8 @@ import threading
 def connect(host):
 
     try:
-        eagle.open(host)
+        if not eagle.running:
+            eagle.open(host)
     except Exception as e:
         return {
             "success": False,
