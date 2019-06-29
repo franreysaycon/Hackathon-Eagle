@@ -13,11 +13,6 @@
     let loading = false;
     let error = "";
     let modalOpen = false;
-    let localStorage = window.localStorage;
-
-    if(localStorage.getItem('host')){
-       currentView = VIEWS.LOGS
-    }
 
     function handleSubmit(){
         loading = true;
@@ -26,7 +21,6 @@
                 loading=false;
                 if(result.success){
                     setView(VIEWS.LOGS);
-                    localStorage.setItem('host', host);
                 }
                 else {
                     error = "Something went wrong. Please check if your host is already provisioned. Error encountered: " + result.message;
@@ -48,12 +42,6 @@
             modalOpen = true;
         }
     }
-
-    eel.expose(push);
-    function push(log){
-        console.log(log);
-    }
-
 </script>
 
 <style>

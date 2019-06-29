@@ -1,13 +1,15 @@
 from configparser import ConfigParser
 from random import Random
+from json import JSONEncoder
 import paramiko
 import os
+import time
 import eel
+import json
 
 class Eagle(object):
 
-    def __init__(self, config_filename, send_func):
-        self.waiting = True
+    def __init__(self, config_filename, send_fn):
         self.running = False
         self.ssh = None
         self.sftp = None
@@ -23,18 +25,11 @@ class Eagle(object):
         self.remotetmp = self.get_config('remotetmpdir')
         self.tempfile = os.sep.join([self.remotetmp, 'log'+str(int(Random().random()*1e12))])
         self.localdir = os.sep.join([os.getcwd(), 'logs'])
-        self.send_log_to_user = send_func
-        if not os.path.exists(self.localdir):
-            os.mkdir(self.localdir)
+        self.send_log_to_user = send_fn
 
 
     def __del__(self):
-        if self.sftp:
-            self.sftp.close()
-            self.sftp = None
-        if self.ssh:
-            self.ssh.close()
-            self.ssh = None
+        self.close()
 
 
     def get_config(self, option):
@@ -49,12 +44,13 @@ class Eagle(object):
                 if filename.split('.')[-1] in ['json', 'log', 'error']:
                     fullpath = os.sep.join([path, filename])
                     filestat = self.sftp.stat(fullpath)
-                    print(filestat.st_mtime, filestat.st_size, fullpath)
+                    self.log('stat', path, filestat.st_mtime, filestat.st_size, filestat.st_mode & 0x4, fullpath)
                     files_info[filename] = dict(
                         name=filename,
                         longname=fullpath,
                         date=filestat.st_mtime,
                         size=filestat.st_size,
+                        mode=filestat.st_mode & 0x4,
                         start=1,
                     )
         return files_info
@@ -66,43 +62,70 @@ class Eagle(object):
         logs_info.update(self.get_files_info(self.thriftlogsdir))
         return logs_info
 
-
-    def get_file(self, log_info):
+    def get_logs(self, log_info):
         print(log_info)
         stdin, stdout, stderr = self.ssh.exec_command(
             'tail -n +%d -q %s | tail -n %d -q' % (
-                log_info['start'],log_info['longname'], self.maxlines
+                log_info['start'], log_info['longname'], self.maxlines
             )
         )
-        self.send_log_to_user(str(stdout.read()))
+
+        message = str(stdout.read(), 'utf-8');
+        message = message.replace("}\n", "},");
+        message = "[" + message + "]";
+
+        try:
+            message = json.dumps(message)
+        except:
+            message = message[1:len(message)-1]
+
+        return message
 
     def send(self, log_info):
-        self.get_file(log_info)
-        locallogfile = os.sep.join([self.localdir, log_info['name']])
-        self.send_log_to_user(locallogfile)
+
+        log_name = log_info['name']
+        contents = self.get_logs(log_info)
+        json = JSONEncoder()
+        log_name = log_name.replace('program_', '').upper()
+        log_name = log_name.replace('-', '_').replace('.', '_')
+        self.send_log_to_user(json.encode(dict(name=log_name, value=contents)))
 
 
     def watch(self):
-        # initially send the all log files
-        self.logs = self.get_logs_info()
-        for log_name in self.logs:
-            self.send(self.logs[log_name])
+        try:
+            # initially send the all log files
+            self.logs = self.get_logs_info()
+            for log_name in self.logs:
+                self.send(self.logs[log_name])
 
-        # sleep and watch for log changes
-        while self.running and not self.waiting:
-            eel.sleep(1)
-            logs_info = self.get_logs_info()
-            for log_key in logs_info:
-                if (
-                    logs_info[log_key]['date'] != self.logs[log_key]['date']
-                    or
-                    logs_info[log_key]['size'] != self.logs[log_key]['size']
-                ):
-                    # the remote file has changed, send the log
-                    self.send(logs_info[log_key])
-                    # update the cached log info
-                    self.logs[log_key] = logs_info[log_key]
-
+            # sleep and watch for log changes
+            while self.running:
+                time.sleep(1)
+                logs_info = self.get_logs_info()
+                for log_key in logs_info:
+                    if (
+                        self.running and
+                        logs_info[log_key]['size'] != 0 and
+                        logs_info[log_key]['mode'] == 0x4 and (
+                            log_key not in self.logs
+                            or
+                            logs_info[log_key]['size'] != self.logs[log_key]['size']
+                            or
+                            logs_info[log_key]['date'] != self.logs[log_key]['date']
+                        )
+                    ):
+                        # the remote file has changed, send the log
+                        self.send(logs_info[log_key])
+                        # update the cached log info
+                        self.logs[log_key] = logs_info[log_key]
+        except Exception as e:
+            self.log('ssh error', e)
+            pass
+        finally:
+            # watch was stopped, wait for 5 seconds before exiting
+            self.running = False
+            # self.sleep(3)
+            self.close()
 
     def open(self, hostname):
         if hostname:
@@ -115,9 +138,25 @@ class Eagle(object):
             self.sftp = self.ssh.open_sftp()
             self.sftp.chdir(self.gaflogsdir)
             self.sftp.getcwd()
-            self.waiting = False
             self.running = True
+            self.hostname = hostname
 
 
     def close(self):
         self.running = False
+        if self.sftp:
+            self.sftp.close()
+            self.sftp = None
+        if self.ssh:
+            self.ssh.close()
+            self.ssh = None
+        # self.sleep(3)
+
+
+    def log(self, *args):
+        # print(args)
+        pass
+
+
+    def sleep(self, seconds):
+        time.sleep(seconds)

@@ -1,46 +1,13 @@
-<script>
-    import { LOG_FILES } from './config.json';
-
-    let currentLog = undefined;
-    let content = "";
-    let lines = ["{\"message\": \"------------ Setting up server at Fri Jun 28 06:15:34 2019\"}\\n{\"message\": \"Spawning 5 workers\"}\\n{\"message\": \"Worker garbage collection is disabled\"}\\n{\"message\": \"Registered plugin: UserHandler\"}\\n{\"message\": \"API Handler registered for plugin events.\"}\\n{\"message\": \"Registered plugin: QueueLoggingPlugin\"}\\n{\"message\": \"Registered plugin: CallTimerPlugin\"}\\n{\"message\": \"Registered plugin: QueueStatsPlugin\"}\\n{\"message\": \"Registered plugin: AuthHandler\"}\\n{\"message\": \"Registered plugin: UsersExceptionHandler\"}\\n{\"message\": \"Registered plugin: TrackingPlugin\"}\\n{\"message\": \"Registered plugin: LocalStoragePlugin\"}\\n{\"message\": \"Registered plugin: TokenBucketRecycler\"}\\n{\"message\": \"Starting server.\"}\\n{\"message\": \"Opening transport.\"}\\n{\"message\": \"Starting worker pool.\"}\\n{\"message\": \"Setting up signal handlers.\"}\\n{\"message\": \"Ready to accept connections.\"}"];
-
-    function handleClick(event) {
-        const LOG_FILE = event.target.id;
-
-        if (currentLog) {
-            const active = document.getElementById(currentLog);
-            active.className = active.className.replace("active", "").trim();
-        }
-
-        setLog(LOG_FILE);
-    }
-
-    function setLog(logFile) {
-        currentLog = logFile;
-
-        const active = document.getElementById(currentLog);
-        active.className += " active";
-
-        // get/set content
-
-        lines = JSON.stringify(content, null, 8).split("\\n");
-    }
-
-    function getLabel(file) {
-        return file.replace(new RegExp('_', 'g'), ' ');
-    }
-</script>
-
 <style type="text/css">
     .container {
-        display: flex;
+        display: grid;
+        grid-template-columns: 250px auto;
         width: 100vw;
         height: 100vh;
         font-family: 'Noto Sans HK', sans-serif;
         font-size: 12px;
-        background-color: #272822;
-        color: #F8F8F2;
+        background-color: #E0E0E0;
+        color: #101010;
     }
 
     .navigation {
@@ -49,46 +16,103 @@
 
     .navigation-item {
         padding: 4px;
-        border: solid 1px black;
+        border: solid .5px #101010;
         flex-wrap: wrap;
         display: flex;
         word-break: break-all;
     }
 
     .navigation-item.active {
-        background-color: #49483E !important;
+        background-color: #FF6961 !important;
     }
 
     .navigation-item:hover {
-        background-color: #3E3D32;
+        background-color: #C0C0C0;
     }
 
     .content {
         overflow-y: auto;
         overflow-x: auto;
-        padding: 16px;
-        max-width: 70vw;
-        flex-grow: 1;
         white-space: pre-wrap;
         word-break: break-all;
+    }
+
+    .area {
+        width: 100%;
+        height: 100%;
+    }
+
+    div.json {
+       background-color: ghostwhite;
+       border: 1px solid silver;
+       padding: 10px;
+       min-height: 100%;
+    }
+
+    b{
+        color: red;
+        margin-left: 2px;
     }
 </style>
 
 <div class="container">
     <div class="navigation">
-        {#each Object.keys(LOG_FILES) as file}
+        {#each LOG_FILES as file}
             <div
-                class="navigation-item"
+                class="{currentLog === file ? 'navigation-item active' : 'navigation-item' }"
                 id={file}
                 on:click={handleClick}
             >
-                {getLabel(file)}
+                {getLabel(file)} {#if logs[file] && logs[file].new} <b>(new)</b> {/if}
             </div>
         {/each}
     </div>
-    <div class="content">
-        {#each lines as line}
-            {line}<br />
-        {/each}
+    <div class="content" id="content">
+        <div class="json">{#if logs[currentLog]}{@html processLog(logs[currentLog].msg)}{/if}</div>
     </div>
 </div>
+
+<script>
+    import { LOG_FILES } from './config.json';
+    import helper from './helpers.js';
+
+    let currentLog = LOG_FILES[0];
+    let logs = {};
+    LOG_FILES.map( (k) => {
+        logs[k] = {
+            new: false,
+            msg: "",
+        };
+    })
+
+    function handleClick(event) {
+        if(logs[currentLog].new){
+            logs[currentLog].new = false;
+        }
+        currentLog = event.target.id;
+    }
+
+    function getLabel(file) {
+        return file.replace(new RegExp('_', 'g'), ' ');
+    }
+
+    function processLog(message){
+
+        let json = helper.convertJson(message);
+        if(!json){
+            return message;
+        }
+        return helper.prettyPrint(json);
+    }
+
+    eel.expose(push);
+    function push(log){
+        log = JSON.parse(log);
+        if(LOG_FILES.includes(log.name)){
+            if(log.name !== currentLog){
+               logs[log.name].new = true;
+            }
+            logs[log.name].msg = log.value;
+        }
+    }
+</script>

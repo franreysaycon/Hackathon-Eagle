@@ -6,3 +6,4 @@ eagle.conf
 npm-debug.log
 logs
 *.pyc
+.DS_Store
