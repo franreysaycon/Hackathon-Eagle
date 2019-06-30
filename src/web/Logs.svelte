@@ -86,23 +86,35 @@
     })
 
     function handleClick(event) {
+        currentLog = event.target.id;
         if(logs[currentLog].new){
             logs[currentLog].new = false;
         }
-        currentLog = event.target.id;
     }
 
     function getLabel(file) {
         return file.replace(new RegExp('_', 'g'), ' ');
     }
 
-    function processLog(message){
+    function processLog(msg){
 
-        let json = helper.convertJson(message);
-        if(!json){
-            return message;
+        let message = "";
+        if(msg){
+            message = JSON.parse(msg);
         }
-        return helper.prettyPrint(json);
+        if(message.length){
+            let output = message.map( m => {
+
+                let converted = helper.convertJson(m);
+                if(converted){
+                    return helper.prettyPrint(converted);
+                }
+                return m;
+            });
+
+            return output.join("<br/>").replace(/(\\r\\n|\\n|\\r)/gm, "<br/>");
+        }
+        return "<center>Nothing to see here</center>"
     }
 
     eel.expose(push);

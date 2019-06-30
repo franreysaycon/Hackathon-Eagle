@@ -6,6 +6,8 @@ import os
 import time
 import eel
 import json
+import sys
+import random
 
 class Eagle(object):
 
@@ -14,7 +16,8 @@ class Eagle(object):
         self.ssh = None
         self.sftp = None
         self.logs = {}
-        # retrieve configuration from external config file
+
+        # Retrieve configuration from external config file
         self.config = ConfigParser()
         self.config.read(os.sep.join([os.getcwd(), config_filename]))
         self.username = self.get_config('username')
@@ -44,7 +47,6 @@ class Eagle(object):
                 if filename.split('.')[-1] in ['json', 'log', 'error']:
                     fullpath = os.sep.join([path, filename])
                     filestat = self.sftp.stat(fullpath)
-                    self.log('stat', path, filestat.st_mtime, filestat.st_size, filestat.st_mode & 0x4, fullpath)
                     files_info[filename] = dict(
                         name=filename,
                         longname=fullpath,
@@ -60,6 +62,7 @@ class Eagle(object):
         logs_info = {}
         logs_info.update(self.get_files_info(self.gaflogsdir))
         logs_info.update(self.get_files_info(self.thriftlogsdir))
+
         return logs_info
 
     def get_logs(self, log_info):
@@ -70,16 +73,10 @@ class Eagle(object):
             )
         )
 
-        message = str(stdout.read(), 'utf-8');
-        message = message.replace("}\n", "},");
-        message = "[" + message + "]";
+        messages = [ str(line) for line in stdout.readlines() ]
+        json = JSONEncoder()
 
-        try:
-            message = json.dumps(message)
-        except:
-            message = message[1:len(message)-1]
-
-        return message
+        return json.encode(messages)
 
     def send(self, log_info):
 
@@ -92,15 +89,17 @@ class Eagle(object):
 
 
     def watch(self):
+
+        print("Starting EAGLE EYES....")
         try:
             # initially send the all log files
             self.logs = self.get_logs_info()
-            for log_name in self.logs:
+            for log_name in self.logs.keys():
                 self.send(self.logs[log_name])
 
             # sleep and watch for log changes
             while self.running:
-                time.sleep(1)
+                time.sleep(5)
                 logs_info = self.get_logs_info()
                 for log_key in logs_info:
                     if (
@@ -119,13 +118,12 @@ class Eagle(object):
                         # update the cached log info
                         self.logs[log_key] = logs_info[log_key]
         except Exception as e:
-            self.log('ssh error', e)
-            pass
-        finally:
-            # watch was stopped, wait for 5 seconds before exiting
-            self.running = False
-            # self.sleep(3)
-            self.close()
+            print(e)
+
+        print("Disconnecting")
+        self.running = False
+        self.close()
+        sys.exit()
 
     def open(self, hostname):
         if hostname:
@@ -150,12 +148,6 @@ class Eagle(object):
         if self.ssh:
             self.ssh.close()
             self.ssh = None
-        # self.sleep(3)
-
-
-    def log(self, *args):
-        # print(args)
-        pass
 
 
     def sleep(self, seconds):

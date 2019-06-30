@@ -36,7 +36,6 @@ def main():
     print('Welcome to Eagle!')
     global eagle
     eagle = Eagle('eagle.conf', send_log_to_user)
-    eagle.watch()
 
     eel.init('src/web')
     t = threading.Thread(target=watcher)
