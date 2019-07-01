@@ -88,7 +88,6 @@ class Eagle(object):
     def watch(self):
 
         print("Starting EAGLE EYES....")
-        spinner = itertools.cycle(['-', '/', '|', '\\'])
         try:
             # initially send the all log files
             print("Initial Loading of Logs...")
