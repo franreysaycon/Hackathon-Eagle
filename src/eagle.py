@@ -67,7 +67,7 @@ class Eagle(object):
     def get_logs(self, log_info):
         print(f"Found changes on {log_info['name']}...")
         stdin, stdout, stderr = self.ssh.exec_command(
-            'tail -n +%d -q %s | tail -n %d -q' % (
+            'sudo tail -n +%d -q %s | tail -n %d -q' % (
                 log_info['start'], log_info['longname'], self.maxlines
             )
         )
