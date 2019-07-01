@@ -7,7 +7,6 @@ import time
 import eel
 import json
 import sys
-import random
 
 class Eagle(object):
 
@@ -66,7 +65,7 @@ class Eagle(object):
         return logs_info
 
     def get_logs(self, log_info):
-        print(log_info)
+        print(f"Found changes on {log_info['name']}...")
         stdin, stdout, stderr = self.ssh.exec_command(
             'tail -n +%d -q %s | tail -n %d -q' % (
                 log_info['start'], log_info['longname'], self.maxlines
@@ -83,25 +82,31 @@ class Eagle(object):
         log_name = log_info['name']
         contents = self.get_logs(log_info)
         json = JSONEncoder()
-        log_name = log_name.replace('program_', '').upper()
-        log_name = log_name.replace('-', '_').replace('.', '_')
         self.send_log_to_user(json.encode(dict(name=log_name, value=contents)))
 
 
     def watch(self):
 
         print("Starting EAGLE EYES....")
+        spinner = itertools.cycle(['-', '/', '|', '\\'])
         try:
             # initially send the all log files
+            print("Initial Loading of Logs...")
             self.logs = self.get_logs_info()
             for log_name in self.logs.keys():
                 self.send(self.logs[log_name])
+            print("Finished Initial Loading of Logs...")
 
-            # sleep and watch for log changes
             while self.running:
-                time.sleep(5)
+                print("Watching....")
+                eel.sleep(0.5)
                 logs_info = self.get_logs_info()
+
                 for log_key in logs_info:
+
+                    for cursor in '|/-\\':
+                        yield cursor
+
                     if (
                         self.running and
                         logs_info[log_key]['size'] != 0 and

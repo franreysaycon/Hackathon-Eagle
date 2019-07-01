@@ -57,13 +57,13 @@
 
 <div class="container">
     <div class="navigation">
-        {#each LOG_FILES as file}
+        {#each logFileKeys as key}
             <div
-                class="{currentLog === file ? 'navigation-item active' : 'navigation-item' }"
-                id={file}
-                on:click={handleClick}
+                class="{currentLog === key ? 'navigation-item active' : 'navigation-item' }"
+                id={key}
+                on:click={()=>handleClick(key)}
             >
-                {getLabel(file)} {#if logs[file] && logs[file].new} <b>(new)</b> {/if}
+                {LOG_FILES[key]} {#if logs[key] && logs[key].new} <b>(new)</b> {/if}
             </div>
         {/each}
     </div>
@@ -73,27 +73,24 @@
 </div>
 
 <script>
-    import { LOG_FILES } from './config.json';
+    import { LOG_FILES } from './config.js';
     import helper from './helpers.js';
 
-    let currentLog = LOG_FILES[0];
+    let logFileKeys = Object.keys(LOG_FILES);
+    let currentLog = logFileKeys[0];
     let logs = {};
-    LOG_FILES.map( (k) => {
+    logFileKeys.map( (k) => {
         logs[k] = {
             new: false,
             msg: "",
         };
-    })
+    });
 
-    function handleClick(event) {
-        currentLog = event.target.id;
+    function handleClick(key) {
+        currentLog = key;
         if(logs[currentLog].new){
             logs[currentLog].new = false;
         }
-    }
-
-    function getLabel(file) {
-        return file.replace(new RegExp('_', 'g'), ' ');
     }
 
     function processLog(msg){
@@ -120,8 +117,8 @@
     eel.expose(push);
     function push(log){
         log = JSON.parse(log);
-        if(LOG_FILES.includes(log.name)){
-            if(log.name !== currentLog){
+        if(logFileKeys.includes(log.name)){
+            if(log.name !== currentLog && log.value !== "[]"){
                logs[log.name].new = true;
             }
             logs[log.name].msg = log.value;
