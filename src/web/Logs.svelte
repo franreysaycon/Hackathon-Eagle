@@ -117,6 +117,7 @@
     eel.expose(push);
     function push(log){
         log = JSON.parse(log);
+        console.log(log);
         if(logFileKeys.includes(log.name)){
             if(log.name !== currentLog && log.value !== "[]"){
                logs[log.name].new = true;

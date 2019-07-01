@@ -103,15 +103,9 @@ class Eagle(object):
 
                 for log_key in logs_info:
 
-                    for cursor in '|/-\\':
-                        yield cursor
-
                     if (
                         self.running and
-                        logs_info[log_key]['size'] != 0 and
-                        logs_info[log_key]['mode'] == 0x4 and (
-                            log_key not in self.logs
-                            or
+                        logs_info[log_key]['size'] != 0 and (
                             logs_info[log_key]['size'] != self.logs[log_key]['size']
                             or
                             logs_info[log_key]['date'] != self.logs[log_key]['date']
