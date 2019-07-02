@@ -1,7 +1,7 @@
 eagle-env
 src/web/public
 node_modules
-config.json
+config.js
 eagle.conf
 npm-debug.log
 logs
